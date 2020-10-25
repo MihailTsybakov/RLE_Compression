@@ -2,22 +2,34 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <stdlib.h> // Для itoa
+#include <stdlib.h> // Р”Р»СЏ itoa
 #include "CImg.h"
 using namespace std;
 using namespace cimg_library;
 
-// Умеет работать с текстовыми файлами и с картинками.
+// РЈРјРµРµС‚ СЂР°Р±РѕС‚Р°С‚СЊ СЃ С‚РµРєСЃС‚РѕРІС‹РјРё С„Р°Р№Р»Р°РјРё Рё СЃ РєР°СЂС‚РёРЅРєР°РјРё.
 class RLE_Compressor
 {
 private:
-    string filename; // Имя файла, который нужно сжать/расжать
+    string filename; // РРјСЏ С„Р°Р№Р»Р°, РєРѕС‚РѕСЂС‹Р№ РЅСѓР¶РЅРѕ СЃР¶Р°С‚СЊ/СЂР°СЃР¶Р°С‚СЊ
     bool compare_pixels(CImg<int> pix_1, CImg<int> pix_2);
 public:
     RLE_Compressor();
     RLE_Compressor(string filename);
-    void Encode(); // Кодирует в сжатый файл
-    void Decode(); // Декодирует запакованный файл
-    void print_sizes(); // Возвращает размер текущего файла
-    void print_sizes(string filename_1, string filename_2); // Возвращает размер filename_1 и filename_2
+
+    void Encode_Txt();
+    void Decode_Txt();
+    void Encode_Bmp();
+    void Decode_Bmp();
+    void Encode_Bin_Txt();
+    void Decode_Bin_Txt();
+    void Encode_Bin_Bit_Txt();
+    void Decode_Bin_Bit_Txt();
+    template <class T>
+    void Encode_Bin();
+    template <class T>
+    void Decode_Bin();
+
+    void print_sizes();
+    void print_sizes(string filename_1, string filename_2);
 };
