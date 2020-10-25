@@ -1,6 +1,6 @@
 #include "funcs.h"
 
-void gen_binary(string filename, int* bytes, int byte_count)
+void gen_binary_txt(string filename, int* bytes, int byte_count)
 {
     fstream file;
     file.open(filename + ".txt", ios::out);
@@ -24,7 +24,7 @@ void gen_binary(string filename, int* bytes, int byte_count)
     file.close();
 }
 
-void read_binary(string filename)
+void read_binary_txt(string filename)
 {
     fstream file;
     string line;
@@ -46,6 +46,50 @@ void read_binary(string filename)
     }
     file.close();
 }
+
+template <class Type>
+void gen_binary(string filename, Type* bytes, int byte_count)
+{
+    ofstream byte_file;
+    byte_file.open(filename, ios::binary);
+    if (!byte_file.is_open())
+    {
+        cout << "Error occured while tried to create bin file. " << endl;
+        exit(-1);
+    }
+    for (int i = 0; i < byte_count; i++)
+    {
+        byte_file.write((char*)&bytes[i], sizeof(bytes[i]));
+    }
+    byte_file.close();
+}
+template  <class Type>
+void read_binary(string filename)
+{
+    ifstream byte_file;
+    byte_file.open(filename, ios::binary);
+    if (!byte_file.is_open())
+    {
+        cout << "Error occured while tried to read bin file. " << endl;
+        exit(-1);
+    }
+    cout << "File " << filename << ": " << endl;
+    int i = 0;
+    Type byte;
+    while (!byte_file.eof())
+    {
+        byte_file.read((char*)&byte, sizeof(byte));
+        cout << i << ": " << byte << endl;
+        i++;
+    }
+    byte_file.close();
+}
+
+template void gen_binary<int>(string filename, int* bytes, int byte_count);
+template void gen_binary<double>(string filename, double* bytes, int byte_count);
+template void read_binary<int>(string filename);
+template void read_binary<double>(string filename);
+
 bool get_num(string line, int *curr_pos, int* number)
 {
     string tmp = "";
@@ -102,21 +146,26 @@ int Autotest()
     RLE_Compressor test_text_dec("Autotest_text_encoded.txt");
     RLE_Compressor test_bmp_enc("Autotest_bmp.bmp");
     RLE_Compressor test_bmp_dec("Autotest_bmp_encoded_bmp.txt");
-    RLE_Compressor test_bin_enc("Autotest_bin.txt");
-    RLE_Compressor test_bin_dec("Autotest_bin_encoded_bin.txt");
-    RLE_Compressor test_bin_bit_enc("Autotest_bin_bit.txt");
-    RLE_Compressor test_bin_bit_dec("Autotest_bin_bit_encoded_bit.txt");
+    RLE_Compressor test_bin_txt_enc("Autotest_bin.txt");
+    RLE_Compressor test_bin_txt_dec("Autotest_bin_encoded_bin.txt");
+    RLE_Compressor test_bin_bit_txt_enc("Autotest_bin_bit.txt");
+    RLE_Compressor test_bin_bit_txt_dec("Autotest_bin_bit_encoded_bit.txt");
+    RLE_Compressor test_bin_enc("Autotest_binary.bin");
+    RLE_Compressor test_bin_dec("Autotest_binary_encoded.bin");
+
     cout << ">------------ Autotest actions ------------<" << endl;
-    test_text_enc.Encode();
-    test_bmp_enc.Encode();
-    test_bin_enc.Encode();
-    test_bin_bit_enc.Encode();
+    test_text_enc.Encode_Txt();
+    test_bmp_enc.Encode_Bmp();
+    test_bin_txt_enc.Encode_Bin_Txt();
+    test_bin_bit_txt_enc.Encode_Bin_Bit_Txt();
+    test_bin_enc.Encode_Bin<double>();
     cout << endl;
-    test_text_dec.Decode();
-    test_bmp_dec.Decode();
-    test_bin_dec.Decode();
-    test_bin_bit_dec.Decode();
-    // 1. —‡‚ÌÂÌËÂ ÚÂÍÒÚÓ‚˚ı Ù‡ÈÎÓ‚:
+    test_text_dec.Decode_Txt();
+    test_bmp_dec.Decode_Bmp();
+    test_bin_txt_dec.Decode_Bin_Txt();
+    test_bin_bit_txt_dec.Decode_Bin_Bit_Txt();
+    test_bin_dec.Decode_Bin<double>();
+    // 1. –°—Ä–∞–≤–Ω–µ–Ω–∏–µ —Ç–µ–∫—Å—Ç–æ–≤—ã—Ö —Ñ–∞–π–ª–æ–≤:
     fstream source_txt;
     fstream result_txt;
     source_txt.open("Autotest_text.txt", ios::in);
@@ -162,7 +211,7 @@ int Autotest()
     source_txt.close();
     result_txt.close();
     cout << endl << "<Autotest> Text files compared, ok" << endl;
-    // 2. —‡‚ÌÂÌËÂ bmp Í‡ÚËÌÓÍ:
+    // 2. –°—Ä–∞–≤–Ω–µ–Ω–∏–µ bmp –∫–∞—Ä—Ç–∏–Ω–æ–∫:
     string src_bmp_name = "Autotest_bmp.bmp";
     string res_bmp_name = "Autotest_bmp_encoded_bmp_decoded.bmp";
     CImg<int> source_img(src_bmp_name.c_str());
@@ -198,7 +247,7 @@ int Autotest()
         }
     }
     cout << "<Autotest> Bmp images compared, ok" << endl;
-    // 3. —‡‚ÌÂÌËÂ ·ËÌ‡Ì˚ı Ù‡ÈÎÓ‚:
+    // 3. –°—Ä–∞–≤–Ω–µ–Ω–∏–µ –±–∏–Ω–∞—Ä–Ω—ã—Ö —Ñ–∞–π–ª–æ–≤:
     fstream source_binary;
     fstream result_binary;
     source_binary.open("Autotest_bin.txt", ios::in);
@@ -220,7 +269,7 @@ int Autotest()
     source_binary.close();
     result_binary.close();
     cout << "<Autotest> Binary files compared, ok" << endl;
-    // 4. —‡‚ÌÂÌËÂ ·ËÌ‡Ì˚ı Ù‡ÈÎÓ‚, ÍÓ‰ËÓ‚‡‚¯ËıÒˇ ÔÓ ·ËÚ‡Ï:
+    // 4. –°—Ä–∞–≤–Ω–µ–Ω–∏–µ –±–∏–Ω–∞—Ä–Ω—ã—Ö —Ñ–∞–π–ª–æ–≤, –∫–æ–¥–∏—Ä–æ–≤–∞–≤—à–∏—Ö—Å—è –ø–æ –±–∏—Ç–∞–º:
     fstream source_bit;
     fstream result_bit;
     source_bit.open("Autotest_bin_bit.txt", ios::in);
@@ -242,6 +291,30 @@ int Autotest()
     source_bit.close();
     result_bit.close();
     cout << "<Autotest> Binary Bit compared, ok" << endl;
-    cout << ">------------ Autotest ended ------------<" << endl << endl;
+    // 5. –°—Ä–∞–≤–Ω–µ–Ω–∏–µ –±–∏–Ω–∞—Ä–Ω—ã—Ö —Ñ–∞–π–ª–æ–≤ —Å double-–º–∏:
+    ifstream source_file;
+    ifstream result_file;
+    source_file.open("Autotest_binary.bin", ios::binary);
+    result_file.open("Autotest_binary_encoded_decoded.bin", ios::binary);
+    if (!source_file.is_open() || !result_file.is_open())
+    {
+        cout << "Error occured while tried to open binary files in autotest " << endl;
+        exit(-1);
+    }
+    double tmp_byte_1, tmp_byte_2;
+    for (int i = 0; i < 150000; i++)
+    {
+        source_file.read((char*)&tmp_byte_1, sizeof(tmp_byte_1));
+        result_file.read((char*)&tmp_byte_2, sizeof(tmp_byte_2));
+        if (tmp_byte_1 != tmp_byte_2)
+        {
+            cout << "Autotest failed: there is a difference between source binary and result binary. " << endl;
+            return 0;
+        }
+    }
+    source_file.close();
+    result_file.close();
+    cout << "<Autotest> Binary.bin files compared, ok" << endl;
+    cout << ">-------------- Autotest ended --------------<" << endl << endl;
     return 1;
 }
