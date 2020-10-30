@@ -7,11 +7,11 @@
 using namespace std;
 using namespace cimg_library;
 
-// Умеет работать с текстовыми файлами и с картинками.
+
 class RLE_Compressor
 {
 private:
-    string filename; // Имя файла, который нужно сжать/расжать
+    string filename;
     bool compare_pixels(CImg<int> pix_1, CImg<int> pix_2);
 public:
     RLE_Compressor();
@@ -26,9 +26,15 @@ public:
     void Encode_Bin_Bit_Txt();
     void Decode_Bin_Bit_Txt();
     template <class T>
-    void Encode_Bin();
+    void Encode_Bin(); // Only for int & double!
     template <class T>
-    void Decode_Bin();
+    void Decode_Bin(); // Only for int & double!
+
+    void Encode_Char(); // uint8t
+    void Decode_Char(); // uint8t
+
+    void Encode_Voxels(); // for voxel files
+    void Decode_Voxels(); // for voxel files
 
     void print_sizes();
     void print_sizes(string filename_1, string filename_2);
