@@ -79,12 +79,12 @@ void read_binary(string filename)
     while (!byte_file.eof())
     {
         byte_file.read((char*)&byte, sizeof(byte));
-        cout << i << ": " << byte << endl;
+        cout << i << ": " << static_cast<int>(byte) << endl;
         i++;
     }
     byte_file.close();
 }
-
+template void read_binary<uint8_t>(string filename);
 template void gen_binary<int>(string filename, int* bytes, int byte_count);
 template void gen_binary<double>(string filename, double* bytes, int byte_count);
 template void read_binary<int>(string filename);
@@ -152,6 +152,8 @@ int Autotest()
     RLE_Compressor test_bin_bit_txt_dec("Autotest_bin_bit_encoded_bit.txt");
     RLE_Compressor test_bin_enc("Autotest_binary.bin");
     RLE_Compressor test_bin_dec("Autotest_binary_encoded.bin");
+    RLE_Compressor test_char_enc("Autotest_char.bin");
+    RLE_Compressor test_char_dec("Autotest_char_encoded.bin");
 
     cout << ">------------ Autotest actions ------------<" << endl;
     test_text_enc.Encode_Txt();
@@ -159,12 +161,14 @@ int Autotest()
     test_bin_txt_enc.Encode_Bin_Txt();
     test_bin_bit_txt_enc.Encode_Bin_Bit_Txt();
     test_bin_enc.Encode_Bin<double>();
+    test_char_enc.Encode_Char();
     cout << endl;
     test_text_dec.Decode_Txt();
     test_bmp_dec.Decode_Bmp();
     test_bin_txt_dec.Decode_Bin_Txt();
     test_bin_bit_txt_dec.Decode_Bin_Bit_Txt();
     test_bin_dec.Decode_Bin<double>();
+    test_char_dec.Decode_Char();
     // 1. Сравнение текстовых файлов:
     fstream source_txt;
     fstream result_txt;
@@ -315,6 +319,52 @@ int Autotest()
     source_file.close();
     result_file.close();
     cout << "<Autotest> Binary.bin files compared, ok" << endl;
+    // Сравнение кодирования char- файлов:
+    ifstream source_char;
+    ifstream result_char;
+    source_char.open("Autotest_char.bin", ios::binary);
+    result_char.open("Autotest_char_encoded_decoded.bin", ios::binary);
+    if (!source_char.is_open() || !result_char.is_open())
+    {
+        cout << "Error occured while tried to open char binaries in autotest. " << endl;
+        exit(-1);
+    }
+    uint8_t tmp_1;
+    uint8_t tmp_2;
+    for (int i = 0; i < 1100000; i++)
+    {
+        source_char >> tmp_1;
+        result_char >> tmp_2;
+        if (tmp_1 != tmp_2)
+        {
+            cout << "Autotest failed: there is a difference between char binaries at position " << i << endl;
+            cout << "Different fragment: tmp_1 is " << static_cast<int>(tmp_1) << ", tmp_2 is " << static_cast<int>(tmp_2) <<  endl;
+            source_char >> tmp_1;
+            result_char >> tmp_2;
+            cout << "tmp 1: " << static_cast<int>(tmp_1) << ", tmp 2: " << static_cast<int>(tmp_2) << endl;
+            return 0;
+        }
+    }
+    source_char.close();
+    result_char.close();
+    cout << "<Autotest> Char binaries compared, ok. " << endl;
     cout << ">-------------- Autotest ended --------------<" << endl << endl;
     return 1;
+}
+
+void gen_char_file(string filename, uint8_t* bytes, int byte_count)
+{
+    ofstream file;
+    file.open(filename, ios::binary);
+    if (!file.is_open())
+    {
+        cout << "Error occured while tried to open file. " << endl;
+        exit(-1);
+    }
+    for (int i = 0; i < byte_count; i++)
+    {
+        file.write((char*)&(bytes[i]), sizeof(uint8_t));
+    }
+    file.close();
+    cout << "Generated " << filename << endl;
 }
