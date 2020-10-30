@@ -8,6 +8,7 @@ template <class Type>
 void gen_binary(string filename, Type* bytes, int byte_count);
 template <class Type>
 void read_binary(string filename);
+void gen_char_file(string filename, uint8_t* bytes, int byte_count);
 
 bool get_num(string line, int *curr_pos, int* number);
 string to_bits(int byte);
