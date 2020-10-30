@@ -34,8 +34,8 @@ void RLE_Compressor::Encode_Txt()
             {
                 if (line[i] != line[i + 1])
                 {
-                    int j = 0;
-                    while(line[i + j] != line[i + j + 1] && (i + j + 1) < static_cast<int>(line.size()) + 1)
+                    int j = 1;
+                    while(line[i + j - 1] != line[i + j] && (i + j) < static_cast<int>(line.size()))
                     {
                         j++;
                     }
@@ -828,8 +828,276 @@ void RLE_Compressor::print_sizes(string filename_1, string filename_2)
     file_1.close();
     file_2.close();
  }
+void RLE_Compressor::Encode_Char()
+{
+    if (filename.find(".bin") == string::npos)
+    {
+        cout << "Error: unsupported file format. " << endl;
+        exit(-1);
+    }
+    ifstream source_file;
+    ofstream output_file;
+    string encoded_name = filename.substr(0, static_cast<int>(filename.size()) - 4) + "_encoded.bin";
+    source_file.open(filename, ios::binary);
+    output_file.open(encoded_name, ios::binary);
+    if (!source_file.is_open() || !output_file.is_open())
+    {
+        cout << "Error occured while tried to open binary files. " << endl;
+        exit(-1);
+    }
+    int byte_count = 0;
+    uint8_t tmp_byte;
+    while (!source_file.eof())
+    {
+        source_file.read((char*)&tmp_byte, sizeof(tmp_byte));
+        byte_count++;
+    }
+    byte_count--;
+    source_file.clear();
+    source_file.seekg(0);
+    int estim_bytes = byte_count;
+    int buffer_size = 1000000;
+    for (int p = 0; p < (byte_count/buffer_size) + 1; p++)
+    {
+        uint8_t *bytes = new uint8_t[(estim_bytes/buffer_size > 0)? buffer_size:estim_bytes];
+        int counter = 0;
+        for (int i = 0; (i < buffer_size && i < estim_bytes); i++)
+        {
+            source_file.read((char*)&tmp_byte, sizeof(tmp_byte));
+            bytes[i] = tmp_byte;
+            counter++;
+        }
+        int i = 0;
+        while (i < counter)
+        {
+            if (bytes[i] != bytes[i+1])
+            {
+                uint8_t tmp = 1;
+                output_file.write((char*)&tmp, sizeof(tmp));
+                output_file.write((char*)&bytes[i], sizeof(bytes[i]));
+            }
+            if (bytes[i] == bytes[i + 1])
+            {
+                int j = 1;
+                while (bytes[i+j - 1] == bytes[i+j] && i + j < estim_bytes && j < 255)
+                {
+                    j++;
+                }
+                uint8_t j_ = static_cast<uint8_t>(j);
+                output_file.write((char*)&j_, sizeof(j_));
+                output_file.write((char*)&bytes[i], sizeof(bytes[i]));
+
+                i += j - 1;
+            }
+            i++;
+        }
+        estim_bytes -= buffer_size;
+        delete[] bytes;
+    }
+    cout << "Ended encoding " << filename << " in " << encoded_name << endl;
+    source_file.close();
+    output_file.close();
+}
+
+void RLE_Compressor::Decode_Char()
+{
+    ifstream source_file;
+    ofstream decoded_file;
+    string decoded_name = filename.substr(0, static_cast<int>(filename.size()) - 4) + "_decoded.bin";
+    source_file.open(filename, ios::binary);
+    decoded_file.open(decoded_name, ios::binary);
+    if (!source_file.is_open() || !decoded_file.is_open())
+    {
+        cout << "Error ocured while tried to open binary files during decoding. " << endl;
+        exit(-1);
+    }
+
+    int byte_count = 0;
+    uint8_t tmp_byte;
+    while (!source_file.eof())
+    {
+        source_file.read((char*)&tmp_byte, sizeof(uint8_t));
+        byte_count++;
+    }
+    byte_count--;
+    source_file.clear();
+    source_file.seekg(0);
+    int estim_bytes = byte_count;
+    int buffer_size = 1000000;
+    for (int p = 0; p < (byte_count/buffer_size) + 1; p++)
+    {
+        uint8_t *bytes = new uint8_t[(estim_bytes/buffer_size > 0)? buffer_size:estim_bytes];
+        int counter = 0;
+        for (int i = 0; (i < buffer_size && i < estim_bytes); i++)
+        {
+            source_file.read((char*)&tmp_byte, sizeof(tmp_byte));
+            bytes[i] = tmp_byte;
+            counter++;
+        }
+        int i = 0;
+        while (i < counter)
+        {
+            if (bytes[i] == 1)
+            {
+                decoded_file << bytes[i + 1];
+                i++;
+            }
+            else
+            {
+                for (int k = 0; k < bytes[i]; k++)
+                {
+                    decoded_file << bytes[i + 1];
+                }
+                i++;
+            }
+            i++;
+        }
+        estim_bytes -= buffer_size;
+        delete[] bytes;
+    }
+    source_file.close();
+    decoded_file.close();
+    cout << "Ended decoding in " << decoded_name << endl;
+}
+
+void RLE_Compressor::Encode_Voxels()
+{
+    if (filename.find(".bin") == string::npos)
+    {
+        cout << "Error: unsupported file format. " << endl;
+        exit(-1);
+    }
+    ifstream source_file;
+    ofstream output_file;
+    string encoded_name = filename.substr(0, static_cast<int>(filename.size()) - 4) + "_encoded.bin";
+    source_file.open(filename, ios::binary);
+    output_file.open(encoded_name, ios::binary);
+    if (!source_file.is_open() || !output_file.is_open())
+    {
+        cout << "Error occured while tried to open binary files. " << endl;
+        exit(-1);
+    }
+
+    int byte_count = 0;
+    uint8_t tmp_byte;
+    while (!source_file.eof())
+    {
+        source_file.read((char*)&tmp_byte, sizeof(tmp_byte));
+        byte_count++;
+    }
+
+    byte_count--;
+    source_file.clear();
+    source_file.seekg(0);
+    int estim_bytes = byte_count;
+    int buffer_size = 1000000;
+    for (int p = 0; p < (byte_count/buffer_size) + 1; p++)
+    {
+        uint8_t *bytes = new uint8_t[(estim_bytes/buffer_size > 0)? buffer_size:estim_bytes];
+        int counter = 0;
+        for (int i = 0; (i < buffer_size && i < estim_bytes); i++)
+        {
+            source_file.read((char*)&tmp_byte, sizeof(tmp_byte));
+            (tmp_byte == 0) ? tmp_byte = 0 : tmp_byte = 1;
+            bytes[i] = tmp_byte;
+            counter++;
+        }
+        int i = 0;
+        while (i < counter - 1)
+        {
+            if (bytes[i] != bytes[i+1])
+            {
+                uint8_t tmp = 1;
+                output_file.write((char*)&tmp, sizeof(tmp));
+                output_file.write((char*)&bytes[i], sizeof(bytes[i]));
+            }
+            else
+            {
+                uint8_t j = 1;
+                while (bytes[i+j - 1] == bytes[i+j] && i + j < counter && j < 255)
+                {
+                    j++;
+                }
+                output_file.write((char*)&j, sizeof(j));
+                output_file.write((char*)&bytes[i], sizeof(bytes[i]));
+
+                i += j - 1;
+            }
+            i++;
+        }
+        estim_bytes -= buffer_size;
+        delete[] bytes;
+    }
+    cout << "Ended encoding " << filename << " in " << encoded_name << endl;
+    source_file.close();
+    output_file.close();
+}
+
+void RLE_Compressor::Decode_Voxels()
+{
+    ifstream source_file;
+    ofstream decoded_file;
+    string decoded_name = filename.substr(0, static_cast<int>(filename.size()) - 4) + "_decoded.bin";
+    source_file.open(filename, ios::binary);
+    decoded_file.open(decoded_name, ios::binary);
+    if (!source_file.is_open() || !decoded_file.is_open())
+    {
+        cout << "Error ocured while tried to open binary files during decoding. " << endl;
+        exit(-1);
+    }
+
+    int byte_count = 0;
+    uint8_t tmp_byte;
+    while (!source_file.eof())
+    {
+        source_file.read((char*)&tmp_byte, sizeof(uint8_t));
+        byte_count++;
+    }
+
+    byte_count--;
+    source_file.clear();
+    source_file.seekg(0);
+    int estim_bytes = byte_count;
+    int buffer_size = 1000000;
+    for (int p = 0; p < (byte_count/buffer_size) + 1; p++)
+    {
+        uint8_t *bytes = new uint8_t[(estim_bytes/buffer_size > 0)? buffer_size:estim_bytes];
+        int counter = 0;
+        for (int i = 0; (i < buffer_size && i < estim_bytes); i++)
+        {
+            source_file.read((char*)&tmp_byte, sizeof(tmp_byte));
+            bytes[i] = tmp_byte;
+            counter++;
+        }
+        int i = 0;
+        while (i < counter - 1)
+        {
+            if (bytes[i] == 1)
+            {
+                decoded_file << bytes[i + 1];
+                i++;
+            }
+            else
+            {
+                for (int k = 0; k < bytes[i]; k++)
+                {
+                    decoded_file << bytes[i + 1];
+                }
+                i++;
+            }
+            i++;
+        }
+        estim_bytes -= buffer_size;
+        delete[] bytes;
+    }
+    source_file.close();
+    decoded_file.close();
+    cout << "Ended decoding in " << decoded_name << endl;
+}
 
 template void RLE_Compressor::Decode_Bin<int>();
 template void RLE_Compressor::Encode_Bin<int>();
+template void RLE_Compressor::Encode_Bin<char>();
+template void RLE_Compressor::Encode_Bin<uint8_t>();
 template void RLE_Compressor::Decode_Bin<double>();
 template void RLE_Compressor::Encode_Bin<double>();
